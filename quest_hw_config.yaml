@@ -1,0 +1,141 @@
+defaults:
+  - ppo_trainer # this is a symbolic link to the verl/verl/trainer/config/ppo_trainer.yaml file
+  - envs
+
+system:
+  CUDA_VISIBLE_DEVICES: "0,1"  # Use two GPUs
+
+micro_batch_size_per_gpu: 8  # Increased batch size for faster training
+ppo_mini_batch_size: 32
+model_path: Qwen/Qwen2.5-0.5B-Instruct
+enable_response_mask: False
+grpo_advantage_length_weight: False
+
+lora:
+  enabled: False  # Disable LoRA for initial training
+  rank: 64
+  alpha: 64
+  target_modules: all-linear
+  local_temp_dir: lora_temp
+
+actor_rollout_ref:
+  model:
+    path: ${model_path}
+  actor:
+    ppo_mini_batch_size: ${ppo_mini_batch_size}
+    micro_batch_size_per_gpu: ${micro_batch_size_per_gpu}
+    ppo_micro_batch_size_per_gpu: ${micro_batch_size_per_gpu}
+    use_ref: True
+    entropy_coeff: 0.001
+    use_kl_loss: False
+    kl_loss_coef: 0.000
+    kl_loss_type: kl
+    clip_ratio_low: 0.2
+    clip_ratio_high: 0.28
+    grpo_advantage_length_weight: ${grpo_advantage_length_weight}
+    optim:
+      betas: [0.9, 0.999]
+    lora:
+      enabled: ${lora.enabled}
+      rank: ${lora.rank}
+      alpha: ${lora.alpha}
+      target_modules: ${lora.target_modules}
+      local_temp_dir: ${lora.local_temp_dir}
+  ref:
+    log_prob_micro_batch_size_per_gpu: ${micro_batch_size_per_gpu}
+  rollout:
+    log_prob_micro_batch_size_per_gpu: ${micro_batch_size_per_gpu}
+    tensor_model_parallel_size: 1
+    max_model_len: 3600
+    prompt_length: 1
+    response_length: 400
+    gpu_memory_utilization: 0.6  # Increased for better performance
+    max_num_batched_tokens: 8192
+    temperature: 1
+    rollout_filter_ratio: 0.25
+    rollout_filter_type: std
+    enforce_eager: False
+    free_cache_engine: False
+    val_kwargs:
+      do_sample: True
+      temperature: 0.5
+    lora:
+      enabled: ${lora.enabled}
+      rank: ${lora.rank}
+      alpha: ${lora.alpha}
+      target_modules: ${lora.target_modules}
+      local_temp_dir: ${lora.local_temp_dir}
+
+critic:
+  ppo_mini_batch_size: ${ppo_mini_batch_size}
+  ppo_micro_batch_size_per_gpu: ${micro_batch_size_per_gpu}
+  model:
+    path: ${model_path}
+  optim:
+    betas: [0.9, 0.999]
+  lora:
+    enabled: ${lora.enabled}
+    rank: ${lora.rank}
+    alpha: ${lora.alpha}
+    target_modules: ${lora.target_modules}
+
+data:
+  max_prompt_length: null
+  max_response_length: null
+  train_batch_size: null
+
+algorithm:
+  gamma: 1.0
+  lam: 1.0
+  adv_estimator: gae  # Using GAE for advantage estimation
+  kl_penalty: kl
+  kl_ctrl:
+    type: fixed
+    kl_coef: 0.000
+
+trainer:
+  project_name: shruti_ragen_hw
+  experiment_name: quest_training
+  total_training_steps: 200  # Adjust based on time constraints
+  validation_steps: 2  # Increased validation frequency
+  val_before_train: True
+  n_gpus_per_node: 2  # Using 2 GPUs as specified in the sbatch file
+  test_freq: 10
+  generations_to_log_to_wandb:
+    train: 64
+    val: 20
+  logger: [ 'console', 'wandb' ]
+
+agent_proxy:
+  max_turn: 5
+  action_sep: "||"
+  max_actions_per_turn: 5
+  use_turn_scores: False
+  enable_think: True
+  reward_normalization:
+    grouping: "state"
+    method: "identity"
+
+es_manager:
+  format_penalty: -0.1
+  train:
+    env_groups: 8  # Number of environment groups for training
+    group_size: 16
+    env_configs:
+      tags: ["FrozenLake", "Bandit"]  # Using two different environments
+      n_groups: [4, 4]  # Equal split between environments
+  val:
+    env_groups: 64  # Reduced validation set for faster iterations
+    group_size: 1
+    env_configs:
+      tags: ["FrozenLake", "Bandit"]
+      n_groups: [32, 32]
+
+ctx_manager:
+  generation:
+    gen_config:
+      response_length: ${actor_rollout_ref.rollout.response_length}
+      temperature: ${actor_rollout_ref.rollout.temperature}
+      top_p: ${actor_rollout_ref.rollout.top_p}
+      top_k: ${actor_rollout_ref.rollout.top_k}
+      kwargs: null 
