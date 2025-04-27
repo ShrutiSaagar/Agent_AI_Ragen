@@ -22,11 +22,6 @@ This homework assignment involves running the [RAGEN (Reasoning AGENT)](https://
 - Find and document interesting reasoning patterns
 - Focus on how the agent develops strategies over time
 
-### Bonus Opportunities
-- **Interesting RL training findings** (2-5 pts)
-- **Additional environments/baselines** (2-5 pts)
-- **Baseline improvements** (5-20 pts)
-- **Adding new environments** (5-20 pts)
 
 ## Setup Instructions
 
@@ -84,18 +79,6 @@ For analyzing agent reasoning:
 3. Analyze how reasoning evolves across training steps
 4. Compare performance between FrozenLake and Bandit environments
 
-## Deliverables
-
-1. **Project Report (10 pts)** - Due April 28
-   - Setup process documentation
-   - Training curve analysis
-   - Case study findings
-   - Any interesting observations or improvements
-
-2. **Project Presentation (10 pts)** - Due April 28
-   - Focus on case study findings
-   - Highlight interesting aspects of the agent's learning
-   - Include any bonus work (new environments, improvements, etc.)
 
 ## Resources
 
@@ -105,17 +88,3 @@ For analyzing agent reasoning:
 - [Quest HPC Documentation](https://services.northwestern.edu/TDClient/30/Portal/KB/ArticleDet?ID=1964)
 - [Weights & Biases Documentation](https://docs.wandb.ai/) 
 
-
-## Submitted batch job 1082707
-
-- sacctmgr list user pqr9695
-- sbatch run_ragen.sbatch
-- sinfo
-- sacct -u pqr9695
-
-
-JobID           JobName  Partition    Account  AllocCPUS      State ExitCode
------------- ---------- ---------- ---------- ---------- ---------- --------
-1082707      shruti_ra+     gengpu     e32706          0    PENDING      0:0
-
-sacct -j 1082707 --format=JobID,JobName,Partition,State,ExitCode,Start,End,Elapsed
