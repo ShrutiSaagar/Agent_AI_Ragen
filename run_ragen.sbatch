@@ -24,7 +24,7 @@ source activate ragen_env             # Activate the RAGEN environment
 cd $SLURM_SUBMIT_DIR                  # Navigate to the submission directory
 
 # --- Set Wandb API Key (if using) ---
-export WANDB_API_KEY=f9994e1f415efed5fbc4440e5d025c1788ada2ca
+export WANDB_API_KEY=zzzzz
 
 # --- Run the Training Script ---
 echo "Starting RAGEN training with quest_hw_config..."
